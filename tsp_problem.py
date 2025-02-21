@@ -163,7 +163,10 @@ class TSPProblem(BaseProblem):
         """
         Q = self.get_qubo()
         offset = 0
-        n_qubits = self.nb_cities * self.nb_cities
+        # Get the number of variables from the QUBO matrix
+        max_index = max(max(i, j) for i, j in Q.keys())
+        n_qubits = max_index + 1  # Since indices are 0-based
+        print("Number of qubits = "+str(n_qubits))
         h = defaultdict(float)
         J = defaultdict(float)
         edges = []
