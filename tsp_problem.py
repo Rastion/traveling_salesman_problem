@@ -3,6 +3,8 @@ import random
 from qubots.base_problem import BaseProblem
 import os
 import numpy as np
+from collections import defaultdict
+
 
 def read_elem(filename):
 
@@ -154,3 +156,27 @@ class TSPProblem(BaseProblem):
             tour = tour[idx:] + tour[:idx]
 
         return tour
+    
+    def get_ising(self):
+        """
+        Convert the QUBO matrix to Ising parameters (h, J, offset).
+        """
+        Q = self.get_qubo()
+        offset = 0
+        n_qubits = self.nb_cities * self.nb_cities
+        h = defaultdict(float)
+        J = defaultdict(float)
+        edges = []
+
+        for i in range(n_qubits):
+            h[(i,)] -= Q.get((i, i), 0) / 2.0
+            offset += Q.get((i, i), 0) / 2.0
+            for j in range(i + 1, n_qubits):
+                if Q.get((i, j), 0) != 0:
+                    edges.append((i, j))
+                J[(i, j)] += Q.get((i, j), 0) / 4.0
+                h[(i,)] -= Q.get((i, j), 0) / 4.0
+                h[(j,)] -= Q.get((i, j), 0) / 4.0
+                offset += Q.get((i, j), 0) / 4.0
+
+        return h, J, offset, edges
