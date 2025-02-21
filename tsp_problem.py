@@ -89,6 +89,7 @@ class TSPProblem(BaseProblem):
         # Build the QUBO matrix as a dictionary with keys (p,q) for p <= q.
         Q = {}
         n = self.nb_cities
+        dist_matrix = np.array(self.dist_matrix)
         max_distance = np.max(self.dist_matrix)
         # Set penalty parameters (A for "each city once" and B for "each position once")
         A = max_distance * n
@@ -108,7 +109,7 @@ class TSPProblem(BaseProblem):
                 for j in range(n):
                     p = i * n + t
                     q = j * n + t_next
-                    add_to_Q(p, q, self.dist_matrix[i, j])
+                    add_to_Q(p, q, dist_matrix[i, j])
 
         # --- Constraint 1: Each city is visited exactly once ---
         # For each city i, add A*(sum_t x[i,t] - 1)^2.
