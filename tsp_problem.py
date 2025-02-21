@@ -2,6 +2,7 @@ import math
 import random
 from qubots.base_problem import BaseProblem
 import os
+import numpy as np
 
 def read_elem(filename):
 
@@ -82,4 +83,73 @@ class TSPProblem(BaseProblem):
         """
         tour = list(range(self.nb_cities))
         random.shuffle(tour)
+        return tour
+
+    def get_qubo(self):
+        # Build the QUBO matrix as a dictionary with keys (p,q) for p <= q.
+        Q = {}
+        n = self.nb_cities
+        max_distance = np.max(self.dist_matrix)
+        # Set penalty parameters (A for "each city once" and B for "each position once")
+        A = max_distance * n
+        B = A  # we use the same penalty for both constraints
+
+        def add_to_Q(p, q, value):
+            if p > q:
+                p, q = q, p
+            Q[(p, q)] = Q.get((p, q), 0) + value
+
+        # --- Objective term: tour cost ---
+        # For each position t, and for each pair of cities (i, j), add:
+        # d(i,j) * x[i,t] * x[j, (t+1) mod n]
+        for t in range(n):
+            t_next = (t + 1) % n
+            for i in range(n):
+                for j in range(n):
+                    p = i * n + t
+                    q = j * n + t_next
+                    add_to_Q(p, q, self.dist_matrix[i, j])
+
+        # --- Constraint 1: Each city is visited exactly once ---
+        # For each city i, add A*(sum_t x[i,t] - 1)^2.
+        for i in range(n):
+            for t1 in range(n):
+                p = i * n + t1
+                # Diagonal contribution: from -2*x + x => net -1 times A for each x.
+                add_to_Q(p, p, -A)
+                for t2 in range(t1 + 1, n):
+                    q = i * n + t2
+                    add_to_Q(p, q, 2 * A)
+
+        # --- Constraint 2: Each position is occupied by exactly one city ---
+        # For each position t, add B*(sum_i x[i,t] - 1)^2.
+        for t in range(n):
+            for i1 in range(n):
+                p = i1 * n + t
+                add_to_Q(p, p, -B)
+                for i2 in range(i1 + 1, n):
+                    q = i2 * n + t
+                    add_to_Q(p, q, 2 * B)
+
+        return Q
+
+    def decode_solution(self, binary_solution):
+        # --- Decode the binary vector into a tour ---
+        # Reshape binary_solution into an (n x n) assignment matrix.
+        n = self.nb_cities
+        X = binary_solution.reshape((n, n))
+        tour = []
+        for t in range(n):
+            col = X[:, t]
+            # If exactly one city is assigned at position t, use it; otherwise take argmax.
+            if np.sum(col) == 1:
+                i = int(np.where(col == 1)[0][0])
+            else:
+                i = int(np.argmax(col))
+            tour.append(i)
+        # Optionally, rotate the tour so that city 0 is first.
+        if 0 in tour:
+            idx = tour.index(0)
+            tour = tour[idx:] + tour[:idx]
+
         return tour
