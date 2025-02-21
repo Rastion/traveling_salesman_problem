@@ -139,6 +139,7 @@ class TSPProblem(BaseProblem):
     def decode_solution(self, binary_solution):
         # --- Decode the binary vector into a tour ---
         # Reshape binary_solution into an (n x n) assignment matrix.
+        binary_solution = np.array(binary_solution)
         n = self.nb_cities
         X = binary_solution.reshape((n, n))
         tour = []
