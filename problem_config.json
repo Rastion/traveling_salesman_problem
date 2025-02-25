@@ -1,40 +1,39 @@
 {
-    "entry_point": "tsp_problem:TSPProblem",
-    "default_params": {
-      "instance_file": "instances/br17.atsp"
-    },
-    "problem_type": "Traveling Salesman Problem",
-    "description": "Given a set of cities and an asymmetric distance matrix (from TSPLib explicit instances), find the roundtrip (tour) of minimal total distance that visits each city exactly once and returns to the starting city.",
-    "keywords": [
-      "tsp",
-      "traveling salesman",
-      "routing",
-      "optimization",
-      "vehicle routing"
-    ],
-    "data_format": {
-      "instance_file": {
-        "format": "The instance file follows the TSPLib explicit format. It includes a 'DIMENSION:' keyword followed by the number of cities, then an 'EDGE_WEIGHT_SECTION' after which the full distance matrix is provided row by row."
-      }
-    },
-    "decision_variables": {
-      "tour": {
-        "type": "list of int",
-        "description": "An ordered list of city indices representing the tour."
-      }
-    },
-    "objective": {
-      "type": "minimization",
-      "function": "Total Distance = sum_{i=1}^{n-1}(d(tour[i-1], tour[i])) + d(tour[n-1], tour[0])",
-      "description": "Minimize the total travel distance of the tour."
-    },
-    "solution_representation": "A list of integers representing the order in which cities are visited.",
-    "compatible_optimizers": [
-      "genetic_algorithm",
-      "simulated_annealing",
-      "particle_swarm",
-      "tabu_search",
-      "rl_optimizer"
-    ]
-  }
-  
+  "entry_point": "tsp_problem:TSPProblem",
+  "default_params": {
+    "instance_file": "instances/att48.tsp"
+  },
+  "problem_type": "Traveling Salesman Problem",
+  "description": "Given a set of cities and an asymmetric distance matrix (or coordinates with ATT distance), find the roundtrip (tour) of minimal total distance that visits each city exactly once and returns to the starting city.",
+  "keywords": [
+    "tsp",
+    "traveling salesman",
+    "routing",
+    "optimization",
+    "vehicle routing"
+  ],
+  "data_format": {
+    "instance_file": {
+      "format": "The instance file follows the TSPLib format. It can either include an explicit 'EDGE_WEIGHT_SECTION' or provide a 'NODE_COORD_SECTION' with coordinates, along with an 'EDGE_WEIGHT_TYPE' specifying 'ATT'."
+    }
+  },
+  "decision_variables": {
+    "tour": {
+      "type": "list of int",
+      "description": "An ordered list of city indices representing the tour."
+    }
+  },
+  "objective": {
+    "type": "minimization",
+    "function": "Total Distance = sum_{i=1}^{n-1}(d(tour[i-1], tour[i])) + d(tour[n-1], tour[0])",
+    "description": "Minimize the total travel distance of the tour."
+  },
+  "solution_representation": "A list of integers representing the order in which cities are visited.",
+  "compatible_optimizers": [
+    "genetic_algorithm",
+    "simulated_annealing",
+    "particle_swarm",
+    "tabu_search",
+    "rl_optimizer"
+  ]
+}
