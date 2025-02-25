@@ -3,15 +3,6 @@ import random
 from qubots.base_problem import BaseProblem
 import os
 
-def read_file_tokens(filename):
-    # Reads the entire file and splits it into tokens.
-    if not os.path.isabs(filename):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        filename = os.path.join(base_dir, filename)
-    with open(filename) as f:
-        tokens = f.read().split()
-    return tokens
-
 def parse_explicit_matrix(tokens, nb_nodes, weight_format="FULL_MATRIX"):
     """
     Parses an explicit distance matrix from the given tokens.
@@ -30,25 +21,15 @@ def parse_explicit_matrix(tokens, nb_nodes, weight_format="FULL_MATRIX"):
 def parse_coordinates(tokens, nb_nodes):
     """
     Parses coordinates from a NODE_COORD_SECTION.
-    Each line is expected to have: <node_index> <x> <y> [<z>]
+    Each line is expected to have: <node_index> <x> <y>
     """
     coords = []
     it = iter(tokens)
-    for i in range(nb_nodes):
-        _ = next(it)  # Discard the node index.
-        # Try to read two coordinates (2D) or three (3D)
+    for _ in range(nb_nodes):
+        next(it)  # Skip the node index
         x = float(next(it))
         y = float(next(it))
-        # Peek to see if a third coordinate exists.
-        if len(coords) < nb_nodes and it.__length_hint__() > 0:
-            try:
-                z = float(next(it))
-                coords.append((x, y, z))
-            except ValueError:
-                # Not a valid float? assume 2D.
-                coords.append((x, y))
-        else:
-            coords.append((x, y))
+        coords.append((x, y))
     return coords
 
 def compute_distance_matrix(coords, edge_weight_type, node_coord_type):
