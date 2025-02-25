@@ -1,46 +1,125 @@
 import math
-import random
 from qubots.base_problem import BaseProblem
 import os
 
 def parse_explicit_matrix(tokens, nb_nodes, weight_format="FULL_MATRIX"):
-    # Remove non-numeric tokens like 'EOF'
+    # Remove any non-numeric tokens such as "EOF"
     tokens = [token for token in tokens if token.upper() != "EOF"]
-    weight_format = weight_format.upper()
-    # Initialize a square matrix with zeros.
+    weight_format = weight_format.upper().replace("_", " ").strip()
     matrix = [[0] * nb_nodes for _ in range(nb_nodes)]
     
-    if weight_format == "FULL_MATRIX":
+    if weight_format == "FUNCTION":
+        raise NotImplementedError("FUNCTION weight type is not implemented")
+    
+    elif weight_format in ["FULL MATRIX"]:
         it = iter(tokens)
         for i in range(nb_nodes):
             for j in range(nb_nodes):
                 matrix[i][j] = int(next(it))
                 
-    elif weight_format == "UPPER_ROW":
-        # For an n x n symmetric matrix, the UPPER_ROW format contains n*(n-1)/2 entries.
+    elif weight_format == "UPPER ROW":
+        # Upper triangular (row-wise) without diagonal: tokens for i < j.
         expected_tokens = (nb_nodes * (nb_nodes - 1)) // 2
         if len(tokens) < expected_tokens:
-            raise ValueError(f"Not enough tokens for UPPER_ROW: expected {expected_tokens}, got {len(tokens)}")
+            raise ValueError(f"Not enough tokens for UPPER ROW: expected {expected_tokens}, got {len(tokens)}")
         it = iter(tokens)
         for i in range(nb_nodes - 1):
             for j in range(i + 1, nb_nodes):
                 value = int(next(it))
                 matrix[i][j] = value
-                matrix[j][i] = value  # fill symmetric entry
-                
-    elif weight_format == "LOWER_ROW":
-        # Similar idea, but the tokens represent the lower triangle (without diagonal)
+                matrix[j][i] = value
+
+    elif weight_format == "LOWER ROW":
+        # Lower triangular (row-wise) without diagonal: tokens for i > j.
         expected_tokens = (nb_nodes * (nb_nodes - 1)) // 2
         if len(tokens) < expected_tokens:
-            raise ValueError(f"Not enough tokens for LOWER_ROW: expected {expected_tokens}, got {len(tokens)}")
+            raise ValueError(f"Not enough tokens for LOWER ROW: expected {expected_tokens}, got {len(tokens)}")
         it = iter(tokens)
         for i in range(1, nb_nodes):
             for j in range(i):
                 value = int(next(it))
                 matrix[i][j] = value
                 matrix[j][i] = value
-                
-    # You can add additional formats (UPPER_DIAG_ROW, LOWER_DIAG_ROW, etc.) similarly.
+
+    elif weight_format == "UPPER DIAG ROW":
+        # Upper triangular (row-wise) including diagonal: tokens for i <= j.
+        expected_tokens = (nb_nodes * (nb_nodes + 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for UPPER DIAG ROW: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        for i in range(nb_nodes):
+            for j in range(i, nb_nodes):
+                value = int(next(it))
+                matrix[i][j] = value
+                if i != j:
+                    matrix[j][i] = value
+
+    elif weight_format == "LOWER DIAG ROW":
+        # Lower triangular (row-wise) including diagonal: tokens for i >= j.
+        expected_tokens = (nb_nodes * (nb_nodes + 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for LOWER DIAG ROW: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        for i in range(nb_nodes):
+            for j in range(i + 1):  # j = 0 to i
+                value = int(next(it))
+                matrix[i][j] = value
+                if i != j:
+                    matrix[j][i] = value
+
+    elif weight_format == "UPPER COL":
+        # Upper triangular (column-wise) without diagonal:
+        expected_tokens = (nb_nodes * (nb_nodes - 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for UPPER COL: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        # For each column j from 1 to n-1, rows i=0..(j-1)
+        for j in range(1, nb_nodes):
+            for i in range(j):
+                value = int(next(it))
+                matrix[i][j] = value
+                matrix[j][i] = value
+
+    elif weight_format == "LOWER COL":
+        # Lower triangular (column-wise) without diagonal:
+        expected_tokens = (nb_nodes * (nb_nodes - 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for LOWER COL: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        # For each column j from 0 to n-2, rows i=j+1..(n-1)
+        for j in range(nb_nodes - 1):
+            for i in range(j + 1, nb_nodes):
+                value = int(next(it))
+                matrix[i][j] = value
+                matrix[j][i] = value
+
+    elif weight_format == "UPPER DIAG COL":
+        # Upper triangular (column-wise) including diagonal:
+        expected_tokens = (nb_nodes * (nb_nodes + 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for UPPER DIAG COL: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        # For each column j from 0 to n-1, rows i=0..j
+        for j in range(nb_nodes):
+            for i in range(j + 1):
+                value = int(next(it))
+                matrix[i][j] = value
+                if i != j:
+                    matrix[j][i] = value
+
+    elif weight_format == "LOWER DIAG COL":
+        # Lower triangular (column-wise) including diagonal:
+        expected_tokens = (nb_nodes * (nb_nodes + 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for LOWER DIAG COL: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        # For each column j from 0 to n-1, rows i from j to n-1
+        for j in range(nb_nodes):
+            for i in range(j, nb_nodes):
+                value = int(next(it))
+                matrix[i][j] = value
+                if i != j:
+                    matrix[j][i] = value
     else:
         raise ValueError("Unsupported EDGE_WEIGHT_FORMAT: " + weight_format)
     
