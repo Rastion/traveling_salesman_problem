@@ -176,6 +176,7 @@ class TSPProblem(BaseProblem):
 
         # Extract header information.
         self.name = header.get("NAME", "Unknown")
+        self.comment = header.get("COMMENT")
         self.problem_type = header.get("TYPE", "TSP")
         self.nb_nodes = int(header.get("DIMENSION"))
         self.edge_weight_type = header.get("EDGE_WEIGHT_TYPE", "EXPLICIT")
