@@ -164,6 +164,11 @@ def read_header_and_data(instance_file):
     data_lines = []
     section = None
 
+    # Resolve relative path with respect to this module’s directory.
+    if not os.path.isabs(instance_file):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        instance_file = os.path.join(base_dir, instance_file)
+
     with open(instance_file) as f:
         for line in f:
             stripped = line.strip()
