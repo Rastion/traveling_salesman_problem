@@ -3,20 +3,18 @@ import random
 from qubots.base_problem import BaseProblem
 import os
 
-def parse_explicit_matrix(tokens, nb_cities, weight_format="FULL_MATRIX"):
-    """
-    Parses an explicit distance matrix from the given tokens.
-    For simplicity, this example assumes the FULL_MATRIX format.
-    Other formats (UPPER_ROW, LOWER_ROW, etc.) would require additional code.
-    """
+def parse_explicit_matrix(tokens, nb_nodes, weight_format="FULL_MATRIX"):
+    # Remove any tokens that are not numeric (e.g. "EOF")
+    tokens = [token for token in tokens if token.upper() != "EOF"]
     matrix = []
     it = iter(tokens)
-    for i in range(nb_cities):
+    for i in range(nb_nodes):
         row = []
-        for j in range(nb_cities):
+        for j in range(nb_nodes):
             row.append(int(next(it)))
         matrix.append(row)
     return matrix
+
 
 def parse_coordinates(tokens, nb_cities):
     """
