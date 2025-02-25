@@ -4,15 +4,46 @@ from qubots.base_problem import BaseProblem
 import os
 
 def parse_explicit_matrix(tokens, nb_nodes, weight_format="FULL_MATRIX"):
-    # Remove any tokens that are not numeric (e.g. "EOF")
+    # Remove non-numeric tokens like 'EOF'
     tokens = [token for token in tokens if token.upper() != "EOF"]
-    matrix = []
-    it = iter(tokens)
-    for i in range(nb_nodes):
-        row = []
-        for j in range(nb_nodes):
-            row.append(int(next(it)))
-        matrix.append(row)
+    weight_format = weight_format.upper()
+    # Initialize a square matrix with zeros.
+    matrix = [[0] * nb_nodes for _ in range(nb_nodes)]
+    
+    if weight_format == "FULL_MATRIX":
+        it = iter(tokens)
+        for i in range(nb_nodes):
+            for j in range(nb_nodes):
+                matrix[i][j] = int(next(it))
+                
+    elif weight_format == "UPPER_ROW":
+        # For an n x n symmetric matrix, the UPPER_ROW format contains n*(n-1)/2 entries.
+        expected_tokens = (nb_nodes * (nb_nodes - 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for UPPER_ROW: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        for i in range(nb_nodes - 1):
+            for j in range(i + 1, nb_nodes):
+                value = int(next(it))
+                matrix[i][j] = value
+                matrix[j][i] = value  # fill symmetric entry
+                
+    elif weight_format == "LOWER_ROW":
+        # Similar idea, but the tokens represent the lower triangle (without diagonal)
+        expected_tokens = (nb_nodes * (nb_nodes - 1)) // 2
+        if len(tokens) < expected_tokens:
+            raise ValueError(f"Not enough tokens for LOWER_ROW: expected {expected_tokens}, got {len(tokens)}")
+        it = iter(tokens)
+        for i in range(1, nb_nodes):
+            for j in range(i):
+                value = int(next(it))
+                matrix[i][j] = value
+                matrix[j][i] = value
+                
+    # You can add additional formats (UPPER_DIAG_ROW, LOWER_DIAG_ROW, etc.) similarly.
+    else:
+        raise ValueError("Unsupported EDGE_WEIGHT_FORMAT: " + weight_format)
+    
     return matrix
 
 
