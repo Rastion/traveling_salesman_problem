@@ -3,7 +3,7 @@ import random
 from qubots.base_problem import BaseProblem
 import os
 
-def parse_explicit_matrix(tokens, nb_nodes, weight_format="FULL_MATRIX"):
+def parse_explicit_matrix(tokens, nb_cities, weight_format="FULL_MATRIX"):
     """
     Parses an explicit distance matrix from the given tokens.
     For simplicity, this example assumes the FULL_MATRIX format.
@@ -11,21 +11,21 @@ def parse_explicit_matrix(tokens, nb_nodes, weight_format="FULL_MATRIX"):
     """
     matrix = []
     it = iter(tokens)
-    for i in range(nb_nodes):
+    for i in range(nb_cities):
         row = []
-        for j in range(nb_nodes):
+        for j in range(nb_cities):
             row.append(int(next(it)))
         matrix.append(row)
     return matrix
 
-def parse_coordinates(tokens, nb_nodes):
+def parse_coordinates(tokens, nb_cities):
     """
     Parses coordinates from a NODE_COORD_SECTION.
     Each line is expected to have: <node_index> <x> <y>
     """
     coords = []
     it = iter(tokens)
-    for _ in range(nb_nodes):
+    for _ in range(nb_cities):
         next(it)  # Skip the node index
         x = float(next(it))
         y = float(next(it))
@@ -196,7 +196,7 @@ class TSPProblem(BaseProblem):
         self.name = header.get("NAME", "Unknown")
         self.comment = header.get("COMMENT")
         self.problem_type = header.get("TYPE", "TSP")
-        self.nb_nodes = int(header.get("DIMENSION"))
+        self.nb_cities = int(header.get("DIMENSION"))
         self.edge_weight_type = header.get("EDGE_WEIGHT_TYPE", "EXPLICIT")
         self.edge_weight_format = header.get("EDGE_WEIGHT_FORMAT", "FULL_MATRIX")
         self.node_coord_type = header.get("NODE_COORD_TYPE", "NO_COORDS")
@@ -207,24 +207,24 @@ class TSPProblem(BaseProblem):
             tokens.extend(line.split())
         
         if section == "EDGE_WEIGHT_SECTION":
-            self.dist_matrix = parse_explicit_matrix(tokens, self.nb_nodes, self.edge_weight_format)
+            self.dist_matrix = parse_explicit_matrix(tokens, self.nb_cities, self.edge_weight_format)
         elif section == "NODE_COORD_SECTION":
-            self.coords = parse_coordinates(tokens, self.nb_nodes)
+            self.coords = parse_coordinates(tokens, self.nb_cities)
             self.dist_matrix = compute_distance_matrix(self.coords, self.edge_weight_type, self.node_coord_type)
         else:
             raise ValueError("Unsupported or missing data section in instance file.")
 
     def evaluate_solution(self, candidate):
-        if sorted(candidate) != list(range(self.nb_nodes)):
+        if sorted(candidate) != list(range(self.nb_cities)):
             return float('inf')
         total = 0
-        for i in range(1, self.nb_nodes):
+        for i in range(1, self.nb_cities):
             total += self.dist_matrix[candidate[i - 1]][candidate[i]]
         total += self.dist_matrix[candidate[-1]][candidate[0]]
         return total
 
     def random_solution(self):
         import random
-        tour = list(range(self.nb_nodes))
+        tour = list(range(self.nb_cities))
         random.shuffle(tour)
         return tour
