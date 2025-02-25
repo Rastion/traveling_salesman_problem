@@ -147,6 +147,52 @@ def calc_distance(c1, c2, edge_weight_type, node_coord_type):
     
     else:
         raise ValueError("Unsupported EDGE_WEIGHT_TYPE: " + edge_weight_type)
+    
+
+
+
+def read_header_and_data(instance_file):
+    """
+    Reads the TSPLIB file line-by-line, extracting header key/value pairs until
+    a known data section is encountered (e.g. NODE_COORD_SECTION or EDGE_WEIGHT_SECTION).
+    Returns a tuple (header, section, data_lines) where:
+    - header is a dict mapping header keys (uppercase) to values,
+    - section is the name of the data section encountered, and
+    - data_lines is a list of strings containing the rest of the file.
+    """
+    header = {}
+    data_lines = []
+    section = None
+
+    with open(instance_file) as f:
+        for line in f:
+            stripped = line.strip()
+            # Skip empty lines.
+            if not stripped:
+                continue
+
+            upper_line = stripped.upper()
+            # Check if we have reached a data section.
+            if upper_line in ["NODE_COORD_SECTION", "EDGE_WEIGHT_SECTION",
+                            "DISPLAY_DATA_SECTION", "DEPOT_SECTION"]:
+                section = upper_line
+                # The rest of the file belongs to the data section.
+                # We add the current line's content if needed or simply break.
+                # In many TSPLIB files, the section header itself is not part of the data.
+                break
+
+            # Process header line: expect "KEY : VALUE" format.
+            if ':' in stripped:
+                key, value = stripped.split(":", 1)
+                header[key.strip().upper()] = value.strip()
+    
+        # Read remaining lines (data part)
+        if section:
+            for line in f:
+                if line.strip():  # ignore empty lines
+                    data_lines.append(line.strip())
+    
+    return header, section, data_lines
 
 class TSPProblem(BaseProblem):
     """
@@ -157,25 +203,10 @@ class TSPProblem(BaseProblem):
     are computed using the ATT (pseudo-Euclidean) formula.
     """
     def __init__(self, instance_file):
-        tokens = read_file_tokens(instance_file)
-        header = {}
-        data_section_index = None
-        i = 0
-        # Process header tokens until a known section is reached.
-        while i < len(tokens):
-            token = tokens[i]
-            if token.upper() in ["NODE_COORD_SECTION", "EDGE_WEIGHT_SECTION", "DISPLAY_DATA_SECTION", "DEPOT_SECTION"]:
-                data_section_index = i
-                break
-            if token.endswith(":"):
-                key = token[:-1].upper()
-                i += 1
-                if i < len(tokens):
-                    header[key] = tokens[i]
-            i += 1
+        header, section, data_lines = read_header_and_data(instance_file)
+        print("Header:", header)  # For debugging
 
-        # Extract header information.
-        print(header)
+        # Set header fields with defaults if missing.
         self.name = header.get("NAME", "Unknown")
         self.comment = header.get("COMMENT")
         self.problem_type = header.get("TYPE", "TSP")
@@ -183,26 +214,21 @@ class TSPProblem(BaseProblem):
         self.edge_weight_type = header.get("EDGE_WEIGHT_TYPE", "EXPLICIT")
         self.edge_weight_format = header.get("EDGE_WEIGHT_FORMAT", "FULL_MATRIX")
         self.node_coord_type = header.get("NODE_COORD_TYPE", "NO_COORDS")
-
-        # Depending on the section, parse the data.
-        section = tokens[data_section_index].upper() if data_section_index is not None else None
+        
+        # Tokenize the data section lines.
+        tokens = []
+        for line in data_lines:
+            tokens.extend(line.split())
+        
         if section == "EDGE_WEIGHT_SECTION":
-            self.dist_matrix = parse_explicit_matrix(
-                tokens[data_section_index + 1:], self.nb_nodes, self.edge_weight_format
-            )
+            self.dist_matrix = parse_explicit_matrix(tokens, self.nb_nodes, self.edge_weight_format)
         elif section == "NODE_COORD_SECTION":
-            self.coords = parse_coordinates(tokens[data_section_index + 1:], self.nb_nodes)
-            self.dist_matrix = compute_distance_matrix(
-                self.coords, self.edge_weight_type, self.node_coord_type
-            )
+            self.coords = parse_coordinates(tokens, self.nb_nodes)
+            self.dist_matrix = compute_distance_matrix(self.coords, self.edge_weight_type, self.node_coord_type)
         else:
             raise ValueError("Unsupported or missing data section in instance file.")
 
     def evaluate_solution(self, candidate):
-        """
-        Evaluates a candidate tour by summing the distances between consecutive nodes,
-        including the return leg.
-        """
         if sorted(candidate) != list(range(self.nb_nodes)):
             return float('inf')
         total = 0
@@ -212,9 +238,7 @@ class TSPProblem(BaseProblem):
         return total
 
     def random_solution(self):
-        """
-        Generates a random tour (a random permutation of the node indices).
-        """
+        import random
         tour = list(range(self.nb_nodes))
         random.shuffle(tour)
         return tour
