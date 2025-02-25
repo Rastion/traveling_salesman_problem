@@ -175,6 +175,7 @@ class TSPProblem(BaseProblem):
             i += 1
 
         # Extract header information.
+        print(header)
         self.name = header.get("NAME", "Unknown")
         self.comment = header.get("COMMENT")
         self.problem_type = header.get("TYPE", "TSP")
