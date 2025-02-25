@@ -31,11 +31,11 @@ class TSPProblem(BaseProblem):
         # Scan tokens to find key fields.
         for token in token_iter:
             upper_token = token.upper()
-            if upper_token == "DIMENSION":
+            if upper_token == "DIMENSION :":
                 self.nb_cities = int(next(token_iter))
-            elif upper_token == "EDGE_WEIGHT_TYPE":
+            elif upper_token == "EDGE_WEIGHT_TYPE :":
                 edge_weight_type = next(token_iter)
-            elif upper_token == "EDGE_WEIGHT_SECTION":
+            elif upper_token == "EDGE_WEIGHT_SECTION :":
                 # The instance provides an explicit full distance matrix.
                 self.dist_matrix = []
                 for _ in range(self.nb_cities):
