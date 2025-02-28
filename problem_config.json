@@ -33,5 +33,6 @@
     "QUBO",
     "Ising"
   ],
-  "creator": "Rastion"
+  "creator": "Rastion",
+  "link_to_dataset": "https://github.com/Rastion/traveling_salesman_problem/blob/main/instances/berlin52.tsp"
 }
