@@ -3,7 +3,7 @@
   "default_params": {
     "instance_file": "instances/att48.tsp"
   },
-  "problem_type": "Traveling Salesman Problem",
+  "problem_name": "Traveling Salesman Problem",
   "description": "Given a set of cities and an asymmetric distance matrix (or coordinates with ATT distance), find the roundtrip (tour) of minimal total distance that visits each city exactly once and returns to the starting city.",
   "keywords": [
     "tsp",
@@ -29,11 +29,9 @@
     "description": "Minimize the total travel distance of the tour."
   },
   "solution_representation": "A list of integers representing the order in which cities are visited.",
-  "compatible_optimizers": [
-    "genetic_algorithm",
-    "simulated_annealing",
-    "particle_swarm",
-    "tabu_search",
-    "rl_optimizer"
-  ]
+  "formulations": [
+    "QUBO",
+    "Ising"
+  ],
+  "creator": "Rastion"
 }
